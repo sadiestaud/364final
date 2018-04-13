@@ -1,0 +1,6 @@
+For this final project, I am looking to create an application that users are able to leave reviews and comments for playlists on Spotify with their API. Without logging in, a user can search for playlists and view the songs that each of the playlists has. They will also be able to view comments that other users have left on other playlists.
+
+However, in order for them to leave a review, a user must create a log in. After logging in, they will be able to leave comments and a star review for a playlist. They will also be able to update and delete their review when logged in. They will not be able to create, update, or delete any other user’s reviews.
+
+
+I would love some feedback in about my databases and association tables to make sure that I am understanding my project correctly!
