@@ -82,6 +82,9 @@ class Playlist(db.Model):
     songs = db.relationship('Song',secondary=playlists_collections,backref=db.backref('playlists',lazy='dynamic'),lazy='dynamic') #many to may relationship between songs and playlists (one playlist can result in many songs, but one song can be on many different playlists)
     reviews = db.relationship('PlaylistReviews', backref='Playlist') # one playlist can have many reviews, but the same review cannot be used for other playlists (one to many relationship)
 
+
+def branch_test_():
+    pass
 # Song model
 class Song(db.Model):
     __tablename__ = 'songs'
