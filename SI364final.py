@@ -144,6 +144,15 @@ class PlaylistSearchForm(FlaskForm):
     submit = SubmitField('Submit')
 
 # Leave a review
+class LeaveReviewForm(FlaskForm):
+    review = StringField("Enter a review for this playlist", validators=[Required(),Length(max=300, message="The review cannot be longer than 300 characters!")])
+    stars = IntegerField("Rate the movie out of 5 stars ",validators=[Required()])
+    submit = SubmitField("Submit your review")
+
+    def validate_stars(form, field):
+        if len(str(field.data)) > 1 :
+            raise ValidationError('Have to be full numbers, no decimals for star rating')
+
 # Update
 # Delete
 
@@ -153,9 +162,91 @@ class PlaylistSearchForm(FlaskForm):
 
 ##### Helper functions
 ### For database additions / get_or_create functions
-# def get_spotify(term):
-# def get_playlist_info(term):
-# def get_playlist_songs_and_artist(tupple):
+#in this function, you will pass in a term/phrase of what type/kind of playlist you are looking for. it will then return a search object with a dictionary of playlist information
+def get_spotify(term):
+    oauth_token = "BQBzjyW0jy8e9rE5-WwzHmfOdjlkfYH8S32vivLnPks-eY4OQ3ofh-K0NQz2Z5hcFrXNhZW2Xs2bgeHdggjvfBA76W8Kad1-OS1nUdZz5VKNQl1J5AWWLmej8tLjwrB3vYiLmXmq4sLOZVcQfHBRY-fBwnysONacqtU" #oauth token for spotify
+    headers ={"Content-Type": "application/json", "Authorization": "Bearer " + oauth_token}
+    params = { 'q': term, 'type': 'playlist'} #q is any term that will be used to get a playlsit
+    search_object = requests.get('https://api.spotify.com/v1/search?', headers=headers, params = params).json() #search object
+    playlists = search_object['playlists']['items'] #get the playlist items
+    return(playlists)
+
+#this function will take in a term and then use the get_spotify function to recieve list of tupples for each playlist. each tupple will contain a playlist's name, id, and user_id
+def get_playlist_info(term):
+    list_of_playlist_dicts = get_spotify(term)
+    list_of_names = []
+    for item in list_of_playlist_dicts:
+        playlist_name = item['name']
+        playlist_id = item['id']
+        user_id = item['owner']['id']
+        list_of_names.append((playlist_name,playlist_id, user_id))
+    return(list_of_names)
+#this function will use a tupple (containing playlist name, id, and user_id) and make another request to spotify to get the tracks and artists for each playlist
+def get_playlist_songs_and_artist(tupple):
+    songs_and_artists = []
+    oauth_token = "BQAVhLvaDkhPII_qNBURcrjL0B4T-038NOG5i96cttghdFZnrzlABEueS--puYg33Yx0op6ccX7YNTHjc3gGv26VAkD2H0XtOqv7blYzM3tQ3JxeHWcEd77XAbog_Aap5CMWQiWmnY15oNd65PlbFFc3WdKLYqpolTI" #you need to generate the OAuth token from https://beta.developer.spotify.com/console/get-search-item/
+    headers ={"Content-Type": "application/json", "Authorization": "Bearer " + oauth_token}
+    search_object = requests.get('https://api.spotify.com/v1/users/'+tupple[2]+'/playlists/'+tupple[1]+'/tracks', headers=headers).json()['items']#[0]['track']
+    for item in search_object:
+        song = item['track']['name']
+        all_artists = item['track']['artists']
+        artist_list = []
+        for a in all_artists:
+            artist = a['name']
+            artist_list.append(artist)
+        tup = (song,artist_list)
+        songs_and_artists.append(tup)
+    return(songs_and_artists)
+
+def get_or_create_song(name, artists):
+    song = Song.query.filter_by(name=name).first()
+    if song:
+        return song
+    else:
+        song = Song(name=name, artists=artists)
+        for artist in artists:
+            artist = get_or_create_artist(artist)
+            db.session.add(artist)
+        db.session.add(song)
+        db.session.commit()
+        return song
+
+def get_or_create_artist(name, songs):
+    artist = Artist.query.filter_by(name=name).first()
+    if artist:
+        return artist
+    else:
+        artist = Artist(name=name, songs=songs)
+        db.session.add(artist)
+        db.session.commit()
+        return artist
+
+def get_or_create_playlist(title, songs):
+    playlist = Playlist.query.filter_by(title=title).first()
+    if playlist:
+        return playlist
+    else:
+        playlist = Playlist(title=title, songs=songs)
+        for song in songs:
+            song = get_or_create_song(song)
+        db.session.add(playlist)
+        db.session.commit()
+        return playlist
+
+def get_or_create_search_term(term):
+    serach_term = SearchTerm.query.filter_by(term=term).first()
+    if search_term:
+        print("Found term")
+        return search_term
+    else:
+        print("Adding term")
+        search_term = SearchTerm(term=term)
+        playlists_search = get_playlist_info(term)
+        for playlsit in playlists_search:
+            playlist = get_or_create_playlist(playlist)
+
+
+
 # def get_or_create_playlist
 # def get_or_create_review
 # def get_or_create_search_term
@@ -168,35 +259,45 @@ class PlaylistSearchForm(FlaskForm):
 ##### Routes and view functions #####
 @app.route('/login',methods=["GET","POST"])
 def login():
-    pass #this will be a view function that will allow a user to login (via login form) to the application. it will render_template for login.html
-    # return render_template('login.html',form=form)
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is not None and user.verify_password(form.password.data):
+            login_user(user, form.remember_me.data)
+            return redirect(request.args.get('next') or url_for('index'))
+        flash('We cannot find this account, please register.')
+    return render_template('login.html',form=form)
 
 @app.route('/logout')
 @login_required
 def logout():
-    pass #tis will be a view function that will allow a user to logout and redirect url_for the index view function
-
-    # logout_user()
-    # flash('You have been logged out')
-    # return redirect(url_for('index'))
+    logout_user()
+    flash('You have been logged out')
+    return redirect(url_for('index'))
 
 @app.route('/register',methods=["GET","POST"])
 def register():
-    pass #this will be a view function that will allow a user to regiester (via registration form) and will redirect the user to the url_for login and allow the user to login. if the registration is unsuccessful (user already exists, it will render_template for register.html)
-
-    #     flash('You can now log in!')
-    #     return redirect(url_for('login'))
-    # return render_template('register.html',form=form)
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(email=form.email.data,username=form.username.data,password=form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('You can now log in!')
+        return redirect(url_for('login'))
+    return render_template('register.html',form=form)
 
 @app.route('/secret')
 @login_required
 def secret():
-    pass #this will make sure that only users can view certain pages
-    # return "Only authenticated users can do this! Try to log in or contact the site admin."
+    return "Only authenticated users can do this! Try to log in or contact the site admin."
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    form = PlaylistSearchForm()
+    if form.validate_on_submit():
+        search_term = form.search.data
+        term = get_or_create_search_term(search_term)
     pass #this will be the home page. here a user will be able to search for a playlist or view previous reviews that users have left for other playlists. after serching, it will redirect url_for search_results. it will render the template for index.html
 
     #     return redirect(url_for('playlist_results', search_term = search_term))
@@ -236,6 +337,13 @@ def my_reviews():
     pass #this view functionw will render a template to allow a user to view their own reviews for playlists
     # return render_template('my_reviews.html', reviews=my_reviews)
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html')
+
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template('500.html')
 
 if __name__ == '__main__':
     db.create_all()

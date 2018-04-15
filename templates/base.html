@@ -1,0 +1,15 @@
+{% block content %}
+
+Base
+
+{% endblock %}
+
+<p>------------</p>
+<h3>Menu</h3>
+<ul>
+    <li><a href="{{ url_for('home')}}">Home</a></li>
+    <li><a href="{{ url_for('find_movie')}}">Find a movie</a></li>
+    <li><a href="{{ url_for('leave_review')}}">Leave a movie review</a></li>
+    <li><a href="{{ url_for('view_reviews')}}">Current reviews</a></li>
+
+</ul>

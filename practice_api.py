@@ -32,7 +32,7 @@ def get_playlist_info(term):
 #this function will use a tupple (containing playlist name, id, and user_id) and make another request to spotify to get the tracks and artists for each playlist
 def get_playlist_songs_and_artist(tupple):
     songs_and_artists = []
-    oauth_token = "BQDg-GhULd4J0ukmAC0w59US6tyJ5apiZjILbo0aKwVjUJVA-ax_2cegJITOeC_Dpvsg4IHPOXvhe1qIFAzg5OSqyaD2Xq-66Dn0w61d4EtFZRSIRaAo7Y_Zt-N0YY5p9m95esqHzvbi0uBesw7Uv1ZWLOlcNXGHHVw" #you need to generate the OAuth token from https://beta.developer.spotify.com/console/get-search-item/
+    oauth_token = "BQAVhLvaDkhPII_qNBURcrjL0B4T-038NOG5i96cttghdFZnrzlABEueS--puYg33Yx0op6ccX7YNTHjc3gGv26VAkD2H0XtOqv7blYzM3tQ3JxeHWcEd77XAbog_Aap5CMWQiWmnY15oNd65PlbFFc3WdKLYqpolTI" #you need to generate the OAuth token from https://beta.developer.spotify.com/console/get-search-item/
     headers ={"Content-Type": "application/json", "Authorization": "Bearer " + oauth_token}
     search_object = requests.get('https://api.spotify.com/v1/users/'+tupple[2]+'/playlists/'+tupple[1]+'/tracks', headers=headers).json()['items']#[0]['track']
     for item in search_object:
@@ -45,4 +45,14 @@ def get_playlist_songs_and_artist(tupple):
         tup = (song,artist_list)
         songs_and_artists.append(tup)
     return(songs_and_artists)
+
+
+# have to serach for a term --> get_spotify
+
+#after picking playlist from get spotify --> use get_playlist_info
+
+#after getting playlist unfo, use that info for get_playlist_songs_and_artist
+
+
+
 # print(get_playlist_songs_and_artist(('Old Drake Mix', '5wa2aJtbvejnwMORdP5tth', 'neeksldn')))
