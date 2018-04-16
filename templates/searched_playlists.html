@@ -1,0 +1,33 @@
+<h1>Search results for {{ term.term }}</h1>
+{% extends 'index.html' %}
+
+{% block navigation %}
+ {{ super() }}
+{% endblock %}
+
+{% block main_content %}
+
+
+<ul>
+{% for playlist in playlists %}
+  <li>
+    <h4><a href="http://localhost:5000/playlist_songs/{{playlist.title}}">{{ playlist.title }}</a></h4><br>
+    <iframe src={{ playlist.pictureURL }} width="150" height="150" frameBorder="0" ></iframe>
+    <h3>Reviews:</h3>
+    <h2>{{ playlist.reviews }}</h2>
+  </li>
+  <br>
+{% endfor %}
+</ul>
+
+{% if not playlists %}
+There are no saved playlists to show.
+{% endif %}
+
+<div>
+{% for message in get_flashed_messages() %}
+<strong>*** {{ message }} ***</strong>
+{% endfor %}
+</div>
+
+{% endblock %}

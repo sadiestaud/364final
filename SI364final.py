@@ -5,7 +5,7 @@ import json
 from flask import Flask, render_template, session, redirect, request, url_for, flash
 from flask_script import Manager, Shell
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, FileField, PasswordField, BooleanField, SelectMultipleField, ValidationError
+from wtforms import StringField, SubmitField, FileField, PasswordField, BooleanField, SelectMultipleField, ValidationError, IntegerField
 from wtforms.validators import Required, Length, Email, Regexp, EqualTo
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate, MigrateCommand
@@ -48,11 +48,6 @@ client_secret = '828d2c8abb9f407489ea390451d5d9fb'
 searched_playlists = db.Table('searched_playlists', db.Column('search_id', db.Integer, db.ForeignKey('search_term.id')), db.Column('playlist_id', db.Integer, db.ForeignKey('playlists.id')))
 
 
-#association Table between playlists and songs
-playlists_collections = db.Table('playlists_collections',db.Column('song_id',db.Integer, db.ForeignKey('songs.id')),db.Column('playlist_id',db.Integer, db.ForeignKey('playlists.id')))
-
-
-
 # Models #
 
 # Special model for users to log in
@@ -79,31 +74,17 @@ class Playlist(db.Model):
     __tablename__ = "playlists"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64),unique=True)
-    songs = db.relationship('Song',secondary=playlists_collections,backref=db.backref('playlists',lazy='dynamic'),lazy='dynamic') #many to may relationship between songs and playlists (one playlist can result in many songs, but one song can be on many different playlists)
+    pictureURL = db.Column(db.String(256))
     reviews = db.relationship('PlaylistReviews', backref='Playlist') # one playlist can have many reviews, but the same review cannot be used for other playlists (one to many relationship)
 
-
-def branch_test_():
-    pass
-# Song model
-class Song(db.Model):
-    __tablename__ = 'songs'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128))
-    artists = db.Column(db.Integer, db.ForeignKey("artists.id"))
-
-class Artist(db.Model):
-    __tablename__ = 'artists'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128))
-    songs = db.relationship('Song',backref='Artist') # artists can have multiple songs
+    def __repr__(self): #__repr__ method that shows the title and the URL of the gif
+        return "{}, URL: {}".format(self.title,self.pictureURL)
 
 class PlaylistReviews(db.Model):
     __tablename__ = 'reviews'
     id = db.Column(db.Integer, primary_key=True)
     review = db.Column(db.String(256))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    title = db.Column(db.String, db.ForeignKey('playlists.title'))
     stars = db.Column(db.Integer())
     playlist = db.Column(db.Integer, db.ForeignKey("playlists.id"))
 
@@ -166,24 +147,26 @@ class LeaveReviewForm(FlaskForm):
 ##### Helper functions
 ### For database additions / get_or_create functions
 #in this function, you will pass in a term/phrase of what type/kind of playlist you are looking for. it will then return a search object with a dictionary of playlist information
-def get_spotify(term):
-    oauth_token = "BQBzjyW0jy8e9rE5-WwzHmfOdjlkfYH8S32vivLnPks-eY4OQ3ofh-K0NQz2Z5hcFrXNhZW2Xs2bgeHdggjvfBA76W8Kad1-OS1nUdZz5VKNQl1J5AWWLmej8tLjwrB3vYiLmXmq4sLOZVcQfHBRY-fBwnysONacqtU" #oauth token for spotify
+def spotify_search(term):
+    oauth_token = "BQD9dTfBQLNX2Ci2HyLSRME9vCIlmtFuYPZFPVZhNkxrv1E0DOTPsEJNFu8gtOxBDfaLS9Xb51NZJ4RMpvmx7CP1ZN7NzFJQKQYLzI61FZc0B85Fzgv32YomBLxLlB2oA3i5Fs56VWDE7Le6A_QO-cMy1j98wFKWrjY" #oauth token for spotify
     headers ={"Content-Type": "application/json", "Authorization": "Bearer " + oauth_token}
-    params = { 'q': term, 'type': 'playlist'} #q is any term that will be used to get a playlsit
+    params = { 'q': term, 'type': 'playlist', 'limit':'10'} #q is any term that will be used to get a playlsit
     search_object = requests.get('https://api.spotify.com/v1/search?', headers=headers, params = params).json() #search object
     playlists = search_object['playlists']['items'] #get the playlist items
     return(playlists)
 
 #this function will take in a term and then use the get_spotify function to recieve list of tupples for each playlist. each tupple will contain a playlist's name, id, and user_id
-def get_playlist_info(term):
-    list_of_playlist_dicts = get_spotify(term)
-    list_of_names = []
+def list_of_playlist_tupples(term):
+    list_of_playlist_dicts = spotify_search(term)
+    list_of_playlist_info = []
     for item in list_of_playlist_dicts:
         playlist_name = item['name']
         playlist_id = item['id']
         user_id = item['owner']['id']
-        list_of_names.append((playlist_name,playlist_id, user_id))
-    return(list_of_names)
+        pictureURL = item['images'][0]['url']
+        list_of_playlist_info.append((playlist_name,playlist_id, user_id, pictureURL))
+    return(list_of_playlist_info)
+
 #this function will use a tupple (containing playlist name, id, and user_id) and make another request to spotify to get the tracks and artists for each playlist
 def get_playlist_songs_and_artist(tupple):
     songs_and_artists = []
@@ -201,61 +184,37 @@ def get_playlist_songs_and_artist(tupple):
         songs_and_artists.append(tup)
     return(songs_and_artists)
 
-def get_or_create_song(name, artists):
-    song = Song.query.filter_by(name=name).first()
-    if song:
-        return song
-    else:
-        song = Song(name=name, artists=artists)
-        for artist in artists:
-            artist = get_or_create_artist(artist)
-            db.session.add(artist)
-        db.session.add(song)
-        db.session.commit()
-        return song
 
-def get_or_create_artist(name, songs):
-    artist = Artist.query.filter_by(name=name).first()
-    if artist:
-        return artist
-    else:
-        artist = Artist(name=name, songs=songs)
-        db.session.add(artist)
-        db.session.commit()
-        return artist
-
-def get_or_create_playlist(title, songs):
+def get_or_create_playlist(title, pictureURL):
     playlist = Playlist.query.filter_by(title=title).first()
     if playlist:
         return playlist
     else:
-        playlist = Playlist(title=title, songs=songs)
-        for song in songs:
-            song = get_or_create_song(song)
+        playlist = Playlist(title=title, pictureURL=pictureURL)
         db.session.add(playlist)
         db.session.commit()
         return playlist
 
 def get_or_create_search_term(term):
-    serach_term = SearchTerm.query.filter_by(term=term).first()
+    search_term = SearchTerm.query.filter_by(term=term).first()
     if search_term:
         print("Found term")
         return search_term
     else:
         print("Adding term")
         search_term = SearchTerm(term=term)
-        playlists_search = get_playlist_info(term)
-        for playlsit in playlists_search:
-            playlist = get_or_create_playlist(playlist)
+        playlists_search = list_of_playlist_tupples(term)
+        for playlist in playlists_search:
+            title=playlist[0]
+            pictureURL = playlist[3]
+            new_playlist = get_or_create_playlist(title, pictureURL)
+            search_term.playlists.append(new_playlist)
+        db.session.add(search_term)
+        db.session.commit()
+        return search_term
 
 
-
-# def get_or_create_playlist
-# def get_or_create_review
-# def get_or_create_search_term
-
-
-
+# def get_or_create_review ?????
 
 
 
@@ -301,20 +260,19 @@ def index():
     if form.validate_on_submit():
         search_term = form.search.data
         term = get_or_create_search_term(search_term)
-    pass #this will be the home page. here a user will be able to search for a playlist or view previous reviews that users have left for other playlists. after serching, it will redirect url_for search_results. it will render the template for index.html
+        return redirect(url_for('playlist_results',search_term=search_term))
+    return render_template('index.html', form=form)
 
-    #     return redirect(url_for('playlist_results', search_term = search_term))
-    # return render_template('index.html',form=form)
 
 @app.route('/playlist_results/<search_term>')
 def playlist_results(search_term):
-    pass #this will be a view function that returns the names of playlists that were in result of the search term, in the template, you will be able to click on the link and view the playlist's songs
-
-    # return render_template('playlist_results.html',term=term)
+    term = SearchTerm.query.filter_by(term=search_term).first()
+    relevant_playlists = term.playlists.all()
+    return render_template('searched_playlists.html', playlists = relevant_playlists, term = term)
 
 @app.route('/playlist_songs/<playlist_name>')
-def search_terms():
-    pass #this will show the user the songs in a certain playlist. they will also be able to see reviews if a user has left any on this playlist. if they are logged in, they will be able to leave a review this will render url for leave_review
+def playlist_songs(playlist_name):
+    pass #this will show the user the songs in a certain playlist. they will also be able to see reviews if a user has left any on this playlist. if they are logged in, they will be able to leave a review this will render url for leave_review it will use get_playlist_songs_and_artist
     # return render_template('playlist_songs.html')
 
 # Provided
@@ -325,8 +283,8 @@ def all_reviews():
 
 @app.route('/searched_terms')
 def all_searches():
-    pass #this will show you all searched terms
-    # return render_template('all_searches.html', searches = searches)
+    all_terms = SearchTerm.query.all()
+    return render_template('search_terms.html', all_terms = all_terms)
 
 @app.route('/leave_review',methods=["GET","POST"])
 @login_required
@@ -334,11 +292,11 @@ def leave_review():
     pass #a user is required to be logged in to leave a review. they will be able to leave a review and after leaving it will redirect url_for playlist reviews. it will render template for leave_review.html
 
 
-@app.route('/my_reviews')
-@login_required
-def my_reviews():
-    pass #this view functionw will render a template to allow a user to view their own reviews for playlists
-    # return render_template('my_reviews.html', reviews=my_reviews)
+# @app.route('/my_reviews')
+# @login_required
+# def my_reviews():
+#     pass #this view functionw will render a template to allow a user to view their own reviews for playlists
+#     # return render_template('my_reviews.html', reviews=my_reviews)
 
 @app.errorhandler(404)
 def page_not_found(e):

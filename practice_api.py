@@ -9,7 +9,7 @@ client_secret = '828d2c8abb9f407489ea390451d5d9fb'
 
 #in this function, you will pass in a term/phrase of what type/kind of playlist you are looking for. it will then return a search object with a dictionary of playlist information
 def get_spotify(term):
-    oauth_token = "BQBzjyW0jy8e9rE5-WwzHmfOdjlkfYH8S32vivLnPks-eY4OQ3ofh-K0NQz2Z5hcFrXNhZW2Xs2bgeHdggjvfBA76W8Kad1-OS1nUdZz5VKNQl1J5AWWLmej8tLjwrB3vYiLmXmq4sLOZVcQfHBRY-fBwnysONacqtU" #oauth token for spotify
+    oauth_token = "BQD9dTfBQLNX2Ci2HyLSRME9vCIlmtFuYPZFPVZhNkxrv1E0DOTPsEJNFu8gtOxBDfaLS9Xb51NZJ4RMpvmx7CP1ZN7NzFJQKQYLzI61FZc0B85Fzgv32YomBLxLlB2oA3i5Fs56VWDE7Le6A_QO-cMy1j98wFKWrjY" #oauth token for spotify
     headers ={"Content-Type": "application/json", "Authorization": "Bearer " + oauth_token}
     params = { 'q': term, 'type': 'playlist'} #q is any term that will be used to get a playlsit
     search_object = requests.get('https://api.spotify.com/v1/search?', headers=headers, params = params).json() #search object
@@ -22,12 +22,15 @@ def get_playlist_info(term):
     list_of_playlist_dicts = get_spotify(term)
     list_of_names = []
     for item in list_of_playlist_dicts:
+        print(item)
         playlist_name = item['name']
         playlist_id = item['id']
         user_id = item['owner']['id']
-        list_of_names.append((playlist_name,playlist_id, user_id))
+        cover_pic = item['images'][0]['url']
+        print(cover_pic)
+        list_of_names.append((playlist_name,playlist_id, user_id, cover_pic))
     return(list_of_names)
-# print(get_playlist_titles('running'))
+print(get_playlist_info('running'))
 
 #this function will use a tupple (containing playlist name, id, and user_id) and make another request to spotify to get the tracks and artists for each playlist
 def get_playlist_songs_and_artist(tupple):
