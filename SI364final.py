@@ -22,6 +22,7 @@ app.config['SECRET_KEY'] = 'hardtoguessstringfromsi364thisisnotsupersecurebutits
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL') or "postgresql://localhost/SI364finalSADIES"
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['HEROKU_ON'] = os.environ.get('HEROKU')
 
 # Set up Flask debug stuff
 manager = Manager(app)
