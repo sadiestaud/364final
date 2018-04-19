@@ -1,0 +1,23 @@
+<h1> Updating review</h1>
+{% extends 'index.html' %}
+{% block navigation %}
+ {{ super() }}
+{% endblock %}
+
+{% block main_content %}
+
+Current review
+<form method="POST" action="/update/{{ review }}">
+	{{ form.hidden_tag() }}
+	{{form.new_review.label }} {{ form.new_review() }}<br>
+  {{form.new_stars.label }} {{ form.new_stars() }}
+	{{ form.submit() }}
+</form>
+
+<div>
+{% for message in get_flashed_messages() %}
+{{ message }}
+{% endfor %}
+</div>
+
+{% endblock %}

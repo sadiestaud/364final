@@ -1,5 +1,10 @@
-{% extends 'base.html' %}
+{% extends 'index.html' %}
+{% block navigation %}
+ {{ super() }}
+{% endblock %}
 
-{% block content %}
-<p>This is a default 404 error template.</p>
+{% block main_content %}
+
+404 error! Try another page?
+
 {% endblock %}

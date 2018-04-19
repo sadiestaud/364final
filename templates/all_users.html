@@ -1,0 +1,28 @@
+<h1> All Users </h1>
+{% extends 'index.html' %}
+{% block navigation %}
+ {{ super() }}
+{% endblock %}
+
+{% block main_content %}
+<ul>
+{% for user in all_users %}
+<li>
+  <h4>{{ user.username }}</h4>
+</li>
+<br>
+{% endfor %}
+</ul>
+
+{% if not reviews %}
+There are no users to show.
+{% endif %}
+
+<div>
+{% for message in get_flashed_messages() %}
+<strong>*** {{ message }} ***</strong>
+{% endfor %}
+</div>
+
+<a href="{{ url_for('index')}}">Return to search for new playlists</a>
+{% endblock %}

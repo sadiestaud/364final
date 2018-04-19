@@ -1,0 +1,16 @@
+{% extends 'index.html' %}
+{% block navigation %}
+ {{ super() }}
+{% endblock %}
+
+{% block main_content %}
+
+<h2> Leave review for <i>{{ playlist_name }}</i> </h2>
+<form action="" method="POST">
+	{{ form.hidden_tag() }}
+	{{ form.review.label }} {{ form.review() }}<br>
+	{{ form.stars.label }} {{ form.stars() }}<br>
+	{{ form.submit.label }}{{ form.submit() }}
+</form>
+
+{% endblock %}

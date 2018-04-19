@@ -1,0 +1,41 @@
+<h1>Playlist results for "{{ playlist_name }}"</h1>
+{% extends 'index.html' %}
+
+{% block navigation %}
+ {{ super() }}
+{% endblock %}
+
+{% block main_content %}
+
+<h3> {{ number_of_songs }} songs</h3>
+<h3><a href="http://localhost:5000/leave_review/{{playlist_name}}">Leave review for {{ playlist_name }}</a><br><br>
+Reviews: </h3><br>
+<ul>
+  {% for review in reviews %}
+  <li> {{ review.review }} <br> Left by: {{ review.username }}
+</li>
+{% endfor %}
+</ul>
+
+{% if not reviews %}
+There are no saved reviews to show.
+{% endif %}
+<br>
+<p>--------</p><br>
+
+<ul>
+{% for song in playlist_tupple %}
+  <li>
+    <h5>{{ song[0] }} <br> Artists: {{ song [1]}}</h5><br>
+  </li>
+  <br>
+{% endfor %}
+</ul>
+
+<div>
+{% for message in get_flashed_messages() %}
+<strong>*** {{ message }} ***</strong>
+{% endfor %}
+</div>
+
+{% endblock %}

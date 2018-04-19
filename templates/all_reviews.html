@@ -1,0 +1,32 @@
+<h1> All reviews </h1>
+{% extends 'index.html' %}
+{% block navigation %}
+ {{ super() }}
+{% endblock %}
+
+{% block main_content %}
+<ul>
+{% for review in all_reviews %}
+<li>
+  <h4>{{ review.playlist }}</h4>
+  <br>
+  Username: <i>{{ review.username }}</i> - Stars: {{ review.stars }}
+  <br>
+  {{ review.review }}
+</li>
+<br>
+{% endfor %}
+</ul>
+
+{% if not reviews %}
+There are no saved reviews to show.
+{% endif %}
+
+<div>
+{% for message in get_flashed_messages() %}
+<strong>*** {{ message }} ***</strong>
+{% endfor %}
+</div>
+
+<a href="{{ url_for('index')}}">Return to search for new playlists</a>
+{% endblock %}

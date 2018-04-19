@@ -1,15 +1,15 @@
-{% block content %}
+{% if current_user.is_authenticated %}
+    <a href="{{ url_for('logout') }}">Sign Out {{current_user.username}}</a>
+{% else %}
+    <a href="{{ url_for('login') }}">Sign In</a>
+{% endif %}
+<br>
+<br>
 
-Base
-
-{% endblock %}
-
-<p>------------</p>
-<h3>Menu</h3>
-<ul>
-    <li><a href="{{ url_for('home')}}">Home</a></li>
-    <li><a href="{{ url_for('find_movie')}}">Find a movie</a></li>
-    <li><a href="{{ url_for('leave_review')}}">Leave a movie review</a></li>
-    <li><a href="{{ url_for('view_reviews')}}">Current reviews</a></li>
-
+{% block navigation %}
+<ul><i>
+    <li><a href="{{ url_for('index') }}">Search for playlists</a>
+    <li><a href="{{ url_for('all_searches') }}">See all past searches</a></li>
 </ul>
+<p>--------</p><br>
+{% endblock %}

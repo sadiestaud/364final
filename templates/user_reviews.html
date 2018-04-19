@@ -1,0 +1,40 @@
+<h1>My reviews</h1>
+
+{% extends 'index.html' %}
+
+{% block navigation %}
+ {{ super() }}
+{% endblock %}
+
+{% block main_content %}
+<ul>
+{% for review in user_reviews %}
+<li>
+    {{ review.playlist }} - Stars: {{ review.stars }}<br>
+    {{ review.review }}
+    <form method="POST" action="/update/{{ review.review }}">
+      {{ form1.hidden_tag() }}
+      {{ form1.submit() }}
+    </form>
+    <form method="POST" action="/delete/{{ review.review }}">
+      {{ form2.hidden_tag() }}
+      {{ form2.submit() }}
+    </form>
+
+</li>
+<br>
+{% endfor %}
+</ul>
+
+{% if not reviews %}
+There are no saved reviews to show.
+{% endif %}
+
+<div>
+{% for message in get_flashed_messages() %}
+<strong>*** {{ message }} ***</strong>
+{% endfor %}
+</div>
+
+<a href="{{ url_for('index')}}">Return to search for new playlists</a>
+{% endblock %}

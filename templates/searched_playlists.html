@@ -1,4 +1,4 @@
-<h1>Search results for {{ term.term }}</h1>
+<h1>Search results for: {{ term.term }}</h1>
 {% extends 'index.html' %}
 
 {% block navigation %}
@@ -6,15 +6,15 @@
 {% endblock %}
 
 {% block main_content %}
+<a href="{{ url_for('index')}}">New search</a>
 
 
+<h3>Click on link to view songs in playlist!</h3>
 <ul>
 {% for playlist in playlists %}
   <li>
-    <h4><a href="http://localhost:5000/playlist_songs/{{playlist.title}}">{{ playlist.title }}</a></h4><br>
+    <h4><a href="http://localhost:5000/playlist_songs/{{playlist.title}}">{{ playlist.title }}</a> <br>Reviews - {{ playlist.reviews }}</h4><br>
     <iframe src={{ playlist.pictureURL }} width="150" height="150" frameBorder="0" ></iframe>
-    <h3>Reviews:</h3>
-    <h2>{{ playlist.reviews }}</h2>
   </li>
   <br>
 {% endfor %}
