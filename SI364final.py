@@ -39,7 +39,7 @@ login_manager.init_app(app) # set up login manager
 #spotify api
 client_id = '2efb491c8f8b49e6825224f3491a1e6e'
 client_secret = '828d2c8abb9f407489ea390451d5d9fb'
-oauth_token = 'BQDrRkCnJa63yIZJx_vQafrU3vqGcqZ7tqOz1SBaIZz7ZgbHOTOZtv_ID6ZTJ5duqUbM7DpWL-ixnfmM_JuY2M_nFm-8KH4bKtepTCyImh5JpWP_pCU13ak7n0yexsfFji6q-oFcyU2XcQJlG_09Zg1vgYj1zi_DgQ0'
+oauth_token = 'BQDtSbKCPKIgnW3ns2YfbFu8NRKGW7XxCmCjSiB_nZXOZtdAhMuuNlfXC572iPOZfYnLCEbxqgPWDDkdz1yGT7-wkNxqVTO06Jf-GGhj1ivYDwoZWVppP_5juipzHRJHaRMTFvj3hMiVGTzy6TwibcbLOZcdBXPCdI4'
 
 #########################
 ##### Set up Models #####
@@ -135,6 +135,11 @@ class LoginForm(FlaskForm):
 class PlaylistSearchForm(FlaskForm):
     search = StringField("Enter a term to search for a playlist", validators=[Required()])
     submit = SubmitField('Submit')
+
+    def validate_seach(form, field):
+        if len(field.data) = 0  :
+            raise ValidationError('Have to search for something to use this!')
+
 
 # Leave a review
 class LeaveReviewForm(FlaskForm):
