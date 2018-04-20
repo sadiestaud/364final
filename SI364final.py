@@ -39,7 +39,7 @@ login_manager.init_app(app) # set up login manager
 #spotify api
 client_id = '2efb491c8f8b49e6825224f3491a1e6e'
 client_secret = '828d2c8abb9f407489ea390451d5d9fb'
-oauth_token = 'BQDtSbKCPKIgnW3ns2YfbFu8NRKGW7XxCmCjSiB_nZXOZtdAhMuuNlfXC572iPOZfYnLCEbxqgPWDDkdz1yGT7-wkNxqVTO06Jf-GGhj1ivYDwoZWVppP_5juipzHRJHaRMTFvj3hMiVGTzy6TwibcbLOZcdBXPCdI4'
+oauth_token = 'BQAFK2RnsMSXc5vTqIqN0a_jAOthdz57ztRbolO46OJZKE9-Ks4xbawUYFXGyOzrqomgJBLtixr7B7sOy9rlOmdEB90O2jqNyD1wx7fSf3YSTpVG-w4pTBJTZphfJXcoXtVno4qerYPck6WLlBB4Vqk9GxQSgKuqLjA'
 
 #########################
 ##### Set up Models #####
@@ -52,7 +52,7 @@ searched_playlists = db.Table('searched_playlists', db.Column('search_id', db.In
 
 # Models #
 
-# Special model for users to log in
+# Special model for users to log in, receieved this from previous homework as well as in class
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -71,7 +71,7 @@ class User(UserMixin, db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-
+# login manager, receieved this from previous homework as well as in class
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id)) # returns User object or None
@@ -89,6 +89,7 @@ class Playlist(db.Model):
     def __repr__(self): #__repr__ method that shows the title and the URL of the gif
         return "{}, URL: {}".format(self.title,self.pictureURL)
 
+ #playlist reviews model
 class PlaylistReviews(db.Model):
     __tablename__ = 'reviews'
     id = db.Column(db.Integer, primary_key=True)
@@ -97,6 +98,7 @@ class PlaylistReviews(db.Model):
     stars = db.Column(db.Integer())
     playlist = db.Column(db.String, db.ForeignKey("playlists.title"))
 
+# search term model
 class SearchTerm(db.Model):
     __tablename__ = 'search_term'
     id = db.Column(db.Integer, primary_key=True)
@@ -107,7 +109,7 @@ class SearchTerm(db.Model):
 
 
 ##### Set up Forms #####
-# Registration
+# Registration form, receieved this from previous homework as well as in class
 class RegistrationForm(FlaskForm):
     email = StringField('Email:', validators=[Required(),Length(1,64),Email()])
     username = StringField('Username:',validators=[Required(),Length(1,64),Regexp('^[A-Za-z][A-Za-z0-9_.]*$',0,'Usernames must have only letters, numbers, dots or underscores')])
@@ -115,7 +117,7 @@ class RegistrationForm(FlaskForm):
     password2 = PasswordField("Confirm Password:",validators=[Required()])
     submit = SubmitField('Register User')
 
-    #Additional checking methods for the form
+    #Additional checking methods for the form, receieved this from previous homework as well as in class
     def validate_email(self,field):
         if User.query.filter_by(email=field.data).first():
             raise ValidationError('Email already registered.')
@@ -124,7 +126,7 @@ class RegistrationForm(FlaskForm):
         if User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already taken')
 
-# Login
+# Login, similar to previous homework as well as in class
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[Required(), Length(1,64), Email()])
     password = PasswordField('Password', validators=[Required()])
@@ -151,10 +153,11 @@ class LeaveReviewForm(FlaskForm):
         if len(str(field.data)) > 1 :
             raise ValidationError('Have to be full numbers, no decimals for star rating')
 
+# receieved this from previous homework as well as in class
 class UpdateButtonForm(FlaskForm):
     submit = SubmitField('Update')
 
-
+# receieved this from previous homework as well as in class
 class DeleteButtonForm(FlaskForm):
     submit = SubmitField('Delete')
 
@@ -254,6 +257,7 @@ def get_or_create_review(current_user, playlist, review, stars):
 
 
 ##### Routes and view functions #####
+# log in, receieved this from previous homework as well as in class
 @app.route('/login',methods=["GET","POST"])
 def login():
     form = LoginForm()
@@ -265,6 +269,7 @@ def login():
         flash('We cannot find this account, please register.')
     return render_template('login.html',form=form)
 
+#log out, receieved this from previous homework as well as in class
 @app.route('/logout')
 @login_required
 def logout():
@@ -272,6 +277,7 @@ def logout():
     flash('You have been logged out')
     return redirect(url_for('index'))
 
+# register, receieved this from previous homework as well as in class
 @app.route('/register',methods=["GET","POST"])
 def register():
     form = RegistrationForm()
@@ -283,12 +289,13 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html',form=form)
 
+# secret, receieved this from previous homework as well as in class
 @app.route('/secret')
 @login_required
 def secret():
     return "Only authenticated users can do this! Try to log in or contact the site admin."
 
-
+# home page
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = PlaylistSearchForm()
@@ -306,7 +313,6 @@ def playlist_results(search_term):
     return render_template('searched_playlists.html', playlists = relevant_playlists, term = term)
 
 @app.route('/playlist_songs/<playlist_name>')
-# @login_required
 def playlist_songs(playlist_name):
     playlist = Playlist.query.filter_by(title=playlist_name).first()
     playlist_tupple = get_playlist_songs_and_artist(playlist.user_id, playlist.spotify_id)
@@ -375,14 +381,17 @@ def all_users():
     all_users = User.query.all()
     return render_template('all_users.html',all_users=all_users)
 
+# 404 error, receieved this from previous homework as well as in class
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html')
 
+#500 error, receieved this from previous homework as well as in class
 @app.errorhandler(500)
 def page_not_found(e):
     return render_template('500.html')
 
+# debugger, receieved this from previous homework as well as in class
 if __name__ == '__main__':
     db.create_all()
     manager.run()
