@@ -137,7 +137,7 @@ class PlaylistSearchForm(FlaskForm):
     submit = SubmitField('Submit')
 
     def validate_seach(form, field):
-        if len(field.data) = 0  :
+        if len(field.data) == 0  :
             raise ValidationError('Have to search for something to use this!')
 
 
